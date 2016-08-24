@@ -47,5 +47,4 @@ class BackupRunner:
             command = ["rsync", "-arve", "ssh", "--delete", ssh_source, ssh_destination]
             if link_dir is not None and os.path.exists(link_dir + folder):
                 command.append("--link-dest={}{}".format(link_dir, folder))
-            # subprocess.call(command)
-            print(command)
+            subprocess.call(command)
