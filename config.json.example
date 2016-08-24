@@ -1,0 +1,14 @@
+{
+	"backup-sources": [
+		{
+			"name": "laptop",
+			"user": "user", 
+			"location": "192.168.1.4", 
+			"folders": [
+				"/home/user",
+                "/mnt/data"
+			]
+		}
+	], 
+	"root-dir": "/home/backups"
+}

@@ -1,0 +1,7 @@
+#!/usr/bin/python
+
+from core import backup, config
+
+config = config.Config()
+runner = backup.BackupRunner(config)
+runner.run_backup()
