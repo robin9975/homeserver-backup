@@ -1,7 +1,14 @@
 #!/usr/bin/python3
 
-from core import backup, config
+import argparse
 
-config = config.Config('config.json')
-runner = backup.BackupRunner(config)
+from core.backup import BackupRunner
+from core.config import Config
+
+parser = argparse.ArgumentParser(description="Execute a backup using rsync")
+parser.add_argument('--dry-run', dest="dry_run", action="store_const", const=True, default=False)
+args = parser.parse_args()
+
+config = Config('config.json')
+runner = BackupRunner(config, args.dry_run)
 runner.run_backup()

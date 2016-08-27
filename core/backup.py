@@ -6,15 +6,16 @@ import datetime
 
 class BackupRunner:
     """
-    This class is able to run the actual backup.
+    This class is runs the actual backup.
 
     It will, for each source, lookup the latest backup,
     and execute a rsync command, for each folder to be backed up
     using the precious as link-dir option (which copies it using hard links).
     """
 
-    def __init__(self, config):
+    def __init__(self, config, dry_run=False):
         self.logger = logger.Logger()
+        self.dry_run = dry_run
         self.config = config
 
     def run_backup(self):
@@ -55,9 +56,34 @@ class BackupRunner:
             self.logger.log_notice("Backing up folder {}".format(folder))
             ssh_source = "{}@{}:{}/".format(source['user'], source['location'], folder)
             ssh_destination = "{}{}/".format(target_dir, folder)
-            if not os.path.exists(ssh_destination):
-                os.makedirs(ssh_destination)
+            self.check_path_exists(ssh_destination)
             command = ["rsync", "-arve", "ssh", "--delete", ssh_source, ssh_destination]
             if link_dir is not None and os.path.exists(link_dir + folder):
                 command.append("--link-dest={}{}".format(link_dir, folder))
-            subprocess.call(command)
+            returncode = self.execute_command(command)
+            if returncode is not 0:
+                self.rollback(ssh_destination)
+
+    def rollback(self, destination):
+        # TODO: Provide a better solid rollback, which removes the whole tree if the rsync fails
+        self.logger.log_warning("Rsync failed, removing directory [" + destination + "]")
+        if self.dry_run:
+            return
+        os.rmdir(destination)
+
+    def check_path_exists(self, path):
+        """ check if a path exists and create it if it does not """
+        if not os.path.exists(path):
+            self.logger.log_notice("creating new folder " + path)
+            if self.dry_run:
+                return
+            os.makedirs(path)
+
+    def execute_command(self, command):
+        """ execute a command if dry run is not enabled """
+        if self.dry_run:
+            self.logger.log_notice("(dry-run): " + ' '.join(command))
+            return 1 
+        return subprocess.call(command)
+        
+
